@@ -1,8 +1,4 @@
 
----
-
-### ✅ نسخه نهایی README برای ریپازیتوری شامل `.ipynb` و `.py`
-
 ````markdown
 # 🏠 Tehran House Price Predictor
 
