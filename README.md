@@ -1,5 +1,4 @@
 
-````markdown
 # 🏠 Tehran House Price Predictor
 
 This project predicts house prices in Tehran using a polynomial regression model. It includes data preprocessing, feature selection, model training, and a GUI for real-time predictions.
