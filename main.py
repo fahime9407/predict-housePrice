@@ -74,11 +74,6 @@ mymodel.fit(x_train_poly, y_train)
 
 print(f"coefficient : {mymodel.coef_[0]} | intercept : {mymodel.intercept_[0]}")
 
-x = np.arange(0, 450, 1)
-y = mymodel.intercept_[0] + mymodel.coef_[0][0] * x + mymodel.coef_[0][1] * (np.pow(x, 2)) + mymodel.coef_[0][2] * (np.pow(x, 3)) + mymodel.coef_[0][3] * (np.pow(x, 4))
-plt.plot(x, y)
-plt.show()
-
 # Model Evaluation
 data_test = data_test.copy() # encode address for test data with the means of train data.
 data_test["Address_Encoded"] = data_test["Address"].map(mean_prices)
@@ -124,7 +119,7 @@ def encode_address(address):
 def predict():
     try:
         area, room, parking, address = float(entry1.get()), int(entry2.get()), combo_box.get(), entry4.get()
-        parking = 1 if parking == "yes" else 0
+        parking = 1 if parking == "Yes" else 0
         address_encoded = encode_address(address)
         x = np.asanyarray([[area, room, parking, address_encoded]])
         x_scaler.transform(x)
@@ -147,7 +142,7 @@ entry1 = Entry(root, width= 21)
 entry1.place(x= 185, y= 20)
 entry2 = Entry(root, width= 21)
 entry2.place(x= 185, y= 60)
-combo_box = ttk.Combobox(root, values= ["yes", "no"], width= 18)
+combo_box = ttk.Combobox(root, values= ["Yes", "No"], width= 18)
 combo_box.place(x= 185, y= 100)
 entry4 = Entry(root, width= 21)
 entry4.place(x= 185, y= 140)
