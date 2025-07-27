@@ -35,7 +35,7 @@ The dataset (`housePrice.csv`) contains:
 If you want to view the full pipeline step-by-step:
 
 ```bash
-jupyter notebook HousePricePredictor.ipynb
+jupyter notebook main.ipynb
 ````
 
 ### Option 2: Run the Python Script
@@ -43,7 +43,7 @@ jupyter notebook HousePricePredictor.ipynb
 If you just want to use the trained model with GUI:
 
 ```bash
-python house_price_predictor.py
+python main.py
 ```
 
 This will launch a **Tkinter GUI** where you can input house features and receive a predicted price in USD.
@@ -86,11 +86,3 @@ The GUI allows you to enter:
 
 **Fahimeh** – IT graduate & Python developer
 📫 Feel free to connect or give feedback!
-
----
-
-## ✅ Future Ideas
-
-* Add more features (e.g., year built, floor number)
-* Export trained model using `joblib`
-* Build a web app version with Streamlit or Flask
