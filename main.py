@@ -10,55 +10,58 @@ from tkinter import ttk
 
 
 # Define Dataset
-df = pd.read_csv("housePrice.csv")
-cdf = df[["Area", "Room", "Parking", "Warehouse", "Elevator", "Address", "Price(USD)"]] # Price(USD) is the label.
-cdf = cdf.dropna()
+df = pd.read_csv("housePrice.csv") # Price(USD) is the label.
+df = df.dropna()
 
 # preprocessing
 # convert the value of "Area" from object to int64 and if its non-convertible the value will be nan.
-cdf["Area"] = pd.to_numeric(cdf["Area"], errors="coerce")
-cdf = cdf.dropna()
+df["Area"] = pd.to_numeric(df["Area"], errors="coerce")
+df = df.dropna()
 
-# this cell drops outlier datas, I determined that if value of "Area" is more than 300 It is outlier.
-Q3 = cdf["Area"].quantile(0.75)
-IQR = Q3
-upper_bound = Q3 + 1.5 * IQR
-cdf["Area"] = cdf["Area"].where(cdf["Area"] <= upper_bound, np.nan) # value if less than 480 else nan.
-cdf = cdf.dropna()
+# this cell drops outlier datas, I determined that if value of "Area" is more than 400 It is outlier.
+Q1 = df["Area"].quantile(0.25)
+Q3 = df["Area"].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 6.2 * IQR
+df["Area"] = df["Area"].where(df["Area"] <= upper_bound, np.nan) # value if less than 480 else nan.
+df = df.dropna()
 
 # convert boolean values to int64.
-cdf["Parking"] = cdf["Parking"].astype(int)
-cdf["Warehouse"] = cdf["Warehouse"].astype(int)
-cdf["Elevator"] = cdf["Elevator"].astype(int)
+df["Parking"] = df["Parking"].astype(int)
+df["Warehouse"] = df["Warehouse"].astype(int)
+df["Elevator"] = df["Elevator"].astype(int)
 
 # split data to train and test.
-msk = np.random.rand(len(cdf)) < 0.8
-
-data_train, data_test = cdf[msk], cdf[~msk]
-
-data_train.shape, data_test.shape
+msk = np.random.rand(len(df)) < 0.8
+train, test = df[msk], df[~msk]
 
 # I used target encoding to encode "Address".
-data_train = data_train.copy() # because of warning message.
-mean_prices = data_train.groupby("Address")["Price(USD)"].mean()
-data_train["Address_Encoded"] = data_train["Address"].map(mean_prices)
-global_price = data_train["Price(USD)"].mean()
-data_train.drop("Address", axis=1, inplace=True) # we dont need "Address" anymore.
+train, test = train.copy(), test.copy() # because of warning message.
+mean_prices = train.groupby("Address")["Price(USD)"].mean()
+train["Address_Encoded"] = train["Address"].map(mean_prices)
+test["Address_Encoded"] = test["Address"].map(mean_prices)# encode address for test data with the means of train data.
+global_price = train["Price(USD)"].mean()
+train.drop("Address", axis=1, inplace=True) # we dont need "Address" anymore.
+test.drop("Address", axis=1, inplace=True)
+test = test.dropna()
 
 # to see correlation between features and label, it is important to use train data for this process.
-corr = data_train.corr(numeric_only=True)
+corr = train.corr(numeric_only=True)
 sns.heatmap(corr, annot=True, cmap="coolwarm")
 plt.show()
 
 # we use features with hight correlations for training.
-x_train = np.asanyarray(data_train[["Area", "Room", "Parking", "Address_Encoded"]])
-y_train = np.asanyarray(data_train[["Price(USD)"]])
+x_train = np.asanyarray(train[["Area", "Room", "Parking", "Address_Encoded"]])
+y_train = np.asanyarray(train[["Price(USD)"]])
 
-# this cell normalizes train datas.
-x_scaler = StandardScaler(copy=False)
-y_scaler = StandardScaler(copy=False)
-x_scaler.fit_transform(x_train)
-y_scaler.fit_transform(y_train)
+x_test = np.asanyarray(test[["Area", "Room", "Parking", "Address_Encoded"]])
+y_test = np.asanyarray(test[["Price(USD)"]])
+
+# this cell normalizes train  and test datas.
+x_scaler = StandardScaler(copy=False, with_mean=True, with_std=True)
+y_scaler = StandardScaler(copy=False, with_mean=True, with_std=True)
+x_scaler.fit_transform(x_train); x_scaler.transform(x_test) 
+y_scaler.fit_transform(y_train); y_scaler.transform(y_test)
 
 
 # Polynomial Regression
@@ -68,31 +71,18 @@ from sklearn.preprocessing import PolynomialFeatures
 
 poly = PolynomialFeatures(degree=2)
 x_train_poly = poly.fit_transform(x_train)
+x_test_poly = poly.transform(x_test) # transform test data for polynomial model with train metrics.
 
 mymodel = LinearRegression()
 mymodel.fit(x_train_poly, y_train)
 
-print(f"coefficient : {mymodel.coef_[0]} | intercept : {mymodel.intercept_[0]}")
-
 # Model Evaluation
-data_test = data_test.copy() # encode address for test data with the means of train data.
-data_test["Address_Encoded"] = data_test["Address"].map(mean_prices)
-data_test = data_test.dropna()
-
-data_test.drop("Address", axis=1, inplace=True)
-
-x_test = np.asanyarray(data_test[["Area", "Room", "Parking", "Address_Encoded"]])
-y_test = np.asanyarray(data_test[["Price(USD)"]])
-
-x_scaler.transform(x_test) # normalize test data
-y_scaler.transform(y_test)
-
-x_test_poly = poly.transform(x_test) # transform test data for polynomial model with train metrics.
 y_pred = mymodel.predict(x_test_poly)
 
 mse = np.mean((y_test - y_pred) ** 2)
 mae = np.mean(np.absolute(y_test - y_pred))
 r2 = r2_score(y_test, y_pred)
+
 # show evaluation result with tkinter
 r = Tk()
 r.title("Evaluation Result")
